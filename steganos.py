@@ -168,15 +168,15 @@ class Steganos(object):
         
         
 if __name__ == '__main__':    
-    teststr="ABCDEFabc 0123456789 ƒ÷‹ﬂ"
+    teststr = ["ABCDEFabc 0123456789 √ñ√Ñ√ú√ü", "124", "blub"]
     password = "secret"
     image_name = 'Android.png'
     
     # test without password but with mutiple continuations
-    print "multiple continuations"
+    print "multiple continuations test: ",
     filename1 = 'image_Steganos.png'
     test = Steganos(image_name)
-    test.update('124')
-    test.update('blub')
+    for string in teststr:
+        test.update(string)
     test.save(filename1)
-    print Steganos(filename1).extract()
+    print "success" if Steganos(filename1).extract() == "".join(teststr) else "fail"
