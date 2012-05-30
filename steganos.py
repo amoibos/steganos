@@ -4,10 +4,7 @@
 # Copyright 2012, Daniel Oelschlegel <amoibos@gmail.com>
 # License: 2-clause BSD
 
-try:
-    import Image
-except ImportError:
-    print "please install pil"
+from PIL import Image
 
 #TODOs:   
 #     :   full unicode and binary support
@@ -63,12 +60,13 @@ class Steganos(object):
     
     def maxDataSize(self):
         width, height = self._image.size
-        calc = max(width * height * len(self._image.getbands()) // 8 - self._headerSize(), 
-                   Steganos.INFINITY)
+        calc = min(width * height * len(self._image.getbands()) // 8 \
+            - self._headerSize(), Steganos.INFINITY)
         return calc
 
     def freeDataSize(self):
-        return max(self.maxDataSize() - len(self._image.getbands()) * (self._position + 1), 0)
+        return max(self.maxDataSize() - len(self._image.getbands()) *\
+            (self._position + 1), 0)
 
     def update(self, text, header=False):
         if not header and self.freeDataSize() < len(text):
@@ -153,7 +151,7 @@ class Steganos(object):
         header += chr(self._size >> 24 & 0xff) + chr(self._size >> 16 & 0xff)
         header += chr(self._size >> 8  & 0xff) + chr(self._size >> 0  & 0xff)
         self.update(header, True)
-        # HACK: possibilty to override payload
+        # make it possibile to override payload
         if jumpBack:
             self._reset(position, band)
         else:
@@ -168,15 +166,14 @@ class Steganos(object):
         
         
 if __name__ == '__main__':    
-    teststr = ["ABCDEFabc 0123456789 ÖÄÜß", "124", "blub"]
+    testStrings = ["ABCDEFabc 0123456789 ÖÄÜß", "124", "blub"]
     password = "secret"
-    image_name = 'Android.png'
+    imageName = 'Android.png'
     
     # test without password but with mutiple continuations
-    print "multiple continuations test: ",
-    filename1 = 'image_Steganos.png'
-    test = Steganos(image_name)
-    for string in teststr:
+    fileName = 'image_Steganos.png'
+    test = Steganos(imageName)
+    for string in testStrings:
         test.update(string)
-    test.save(filename1)
-    print "success" if Steganos(filename1).extract() == "".join(teststr) else "fail"
+    test.save(fileName)
+    assert Steganos(fileName).extract() == "".join(testStrings)
