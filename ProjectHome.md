@@ -1,0 +1,1 @@
+Steganos is a small python script for hiding text information in images. It uses PIL for processing and you a basic xor crypt support.
