@@ -1,9 +1,9 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 #encoding:UTF-8
 
 # Copyright 2012, Daniel Oelschlegel <amoibos@gmail.com>
 # License: 2-clause BSD
-
+from __future__ import division
 from PIL import Image
 
 #TODOs:   
@@ -45,49 +45,49 @@ class Steganos(object):
         # all color tuples
         self._data = list(self._image.getdata())
     
-    def _headerSize(self):
+    def _header_size(self):
         return Steganos.MAX_TEXT_SIZE
     
     def _reset(self, position=0, band=0):
         self._position = position
         self._band = band
     
-    def currentSize(self):
+    def current_size(self):
         return self._size
         
-    def currentPassword(self):
+    def current_password(self):
         return self._password
     
-    def maxDataSize(self):
+    def max_data_size(self):
         width, height = self._image.size
         calc = min(width * height * len(self._image.getbands()) // 8 \
-            - self._headerSize(), Steganos.INFINITY)
+            - self._header_size(), Steganos.INFINITY)
         return calc
 
-    def freeDataSize(self):
-        return max(self.maxDataSize() - len(self._image.getbands()) *\
+    def free_data_size(self):
+        return max(self.max_data_size() - len(self._image.getbands()) *\
             (self._position + 1), 0)
 
     def update(self, text, header=False):
-        if not header and self.freeDataSize() < len(text):
+        if not header and self.free_data_size() < len(text):
             return
         if not header:
             if self._password != '':
                 text = self._encrypt(text)
-            if self._size + len(text) + self._headerSize() > self.maxDataSize():
+            if self._size + len(text) + self._header_size() > self.max_data_size():
                 return
             self._size += len(text)
         color = list(self._data[self._position]) 
-        bandNumber = len(self._image.getbands())       
+        band_number = len(self._image.getbands())       
         for char in text:
-            for bit in xrange(8):  
+            for bit in range(8):  
                 if (ord(char) & Steganos.SELECT[bit]) != 0:
                     color[self._band] |= 1
                 else:
                     color[self._band] &= ~1
                 self._data[self._position] = tuple(color)
                 self._band += 1
-                if self._band == bandNumber:
+                if self._band == band_number:
                     self._band = 0
                     self._position += 1
                     color = list(self._data[self._position])  
@@ -95,30 +95,30 @@ class Steganos(object):
     def extract(self):
         self._reset()
         text = ''
-        bit = code = charcnt = 0
+        bit = code = char_cnt = 0
         self._size = Steganos.INFINITY
-        for self._position in xrange(Steganos.INFINITY):
-            color = self._data[self._position]
-            for self._band in xrange(len(color)):
-                if (color[self._band] & 1) != 0:
+        for self._position in range(Steganos.INFINITY):
+            data = self._data[self._position]
+            for self._band, _ in enumerate(data):
+                if (data[self._band] & 1) != 0:
                     code += Steganos.SELECT[bit]
                 bit += 1
                 if bit == 8:
                     text += chr(code)
                     bit = code = 0
-                    charcnt += 1
+                    char_cnt += 1
                     if self._size == Steganos.INFINITY and \
-                        len(text) == self._headerSize():
+                        len(text) == self._header_size():
                         # retrieve payload size from header
                         self._size = (ord(text[0]) << 24) + (ord(text[1]) << 16)
                         self._size += (ord(text[2]) << 8) + ord(text[3])
                         text = ''
-                        charcnt = 0
-                    elif charcnt == self._size:
+                        char_cnt = 0
+                    elif char_cnt == self._size:
                         break
             # for continuation after extracting          
-            if charcnt == self._size:
-                if self._band + 1 == len(color):
+            if char_cnt == self._size:
+                if self._band + 1 == len(data):
                     self._band = 0
                     self._position += 1
                 else:
@@ -132,19 +132,19 @@ class Steganos(object):
         start = self._size % len(self._password)
         key = (self._password * 2)[start:start + len(self._password)]
         cipher = ''
-        for pos in xrange(len(text)):
+        for pos,_ in enumerate(text):
             cipher += chr(ord(text[pos]) ^\
                 ord(key[pos % len(self._password)]))
         return cipher
         
     def _decrypt(self, text):
         cipher = ''
-        for pos in xrange(len(text)):
+        for pos, _ in enumerate(text):
             cipher += chr(ord(text[pos]) ^\
                 ord(self._password[pos % len(self._password)]))
         return cipher
             
-    def _writeHeader(self, jumpBack=True):
+    def _write_header(self, jumpBack=True):
         band, position = self._band, self._position
         self._reset()
         header = ''
@@ -158,22 +158,22 @@ class Steganos(object):
             self._size = 0
         
     def save(self, filename):
-        self._writeHeader()
+        self._write_header()
         if not filename.lower().endswith('.png'):
-            filename += '.png'
+            filename = "".join([filename, '.png'])
         self._image.putdata(tuple(self._data))
         self._image.save(filename)
         
         
 if __name__ == '__main__':    
-    testStrings = ["ABCDEFabc 0123456789 ÖÄÜß", "124", "blub"]
+    teststrings = ["ABCDEFabc 0123456789 ÖÄÜß", "124", "blub"]
     password = "secret"
-    imageName = 'Android.png'
+    image_name = 'Android.png'
     
     # test without password but with mutiple continuations
-    fileName = 'image_Steganos.png'
-    test = Steganos(imageName)
-    for string in testStrings:
+    file_name = 'image_Steganos.png'
+    test = Steganos(image_name)
+    for string in teststrings:
         test.update(string)
     test.save(fileName)
     assert Steganos(fileName).extract() == "".join(testStrings)
