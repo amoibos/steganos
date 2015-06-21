@@ -1,16 +1,19 @@
-#! /usr/bin/env python
+#!/usr/bin/env python
 
-# Copyright 2012, Daniel Oelschlegel <amoibos@gmail.com>
-# License: 2-clause BSD
+try:
+    from Tkinter import *
+    import tkFileDialog as filedialog
+    from tkMessageBox import showinfo
+except ImportError:
+    from tkinter import *
+    from tkinter.messagebox import showinfo
 
-from Tkinter import *
-import tkFileDialog
 from steganos import Steganos
 
 __author__ = "Daniel Oelschlegel"
-__copyright__ = "Copyright 2012, " + __author__
+__copyright__ = "Copyright 2015, " + __author__
 __credits__ = [""]
-__license__ = "BSD"
+__license__ = "NBSD"
 __version__ = "0.0.1"
 
 class Steganos_Gui():
@@ -53,16 +56,16 @@ class Steganos_Gui():
         self.window.mainloop()
      
     def update(self):
-       pass
+       showinfo('', 'not implemented yet')
 
     def save(self):
-        pass
+        showinfo('', 'not implemented yet')
 
     def extract(self):
         self.text.set(Steganos(self.source.get(), self.password.get()).extract())
   
     def openDialog(self):
-        filePath = tkFileDialog.askopenfilename(parent=self.window,
+        filePath = filedialog.askopenfilename(parent=self.window,
             initialdir=self.source.get(), 
             title="Please select an image")
         self.source.set(filePath)

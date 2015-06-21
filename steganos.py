@@ -5,6 +5,7 @@
 # License: 2-clause BSD
 from __future__ import division
 from PIL import Image
+from platform import python_version_tuple
 
 #TODOs:   
 #     :   full unicode and binary support
@@ -20,11 +21,16 @@ from PIL import Image
 #check behaviour for l and p mode
 #optimal variable size
 
+if python_version_tuple()[0] < '3':
+    range = xrange
+
 __author__ = "Daniel Oelschlegel"
-__copyright__ = "Copyright 2012, " + __author__
+__copyright__ = "Copyright 2015, " + __author__
 __credits__ = [""]
 __license__ = "BSD"
 __version__ = "0.1"
+
+
 
 class Steganos(object):
     # save unnecessary computations
@@ -36,9 +42,9 @@ class Steganos(object):
     def __init__(self, filename, password=''):
         self._image = Image.open(filename)
         # current color tuple
-        self._position = self._headerSize() * 8 // len(self._image.getbands())
+        self._position = self._header_size() * 8 // len(self._image.getbands())
         # current component of color tuple
-        self._band = self._headerSize() * 8 % len(self._image.getbands())
+        self._band = self._header_size() * 8 % len(self._image.getbands())
         # payload length
         self._size = 0
         self._password = password
@@ -175,5 +181,5 @@ if __name__ == '__main__':
     test = Steganos(image_name)
     for string in teststrings:
         test.update(string)
-    test.save(fileName)
-    assert Steganos(fileName).extract() == "".join(testStrings)
+    test.save(file_name)
+    assert Steganos(file_name).extract() == "".join(teststrings)
